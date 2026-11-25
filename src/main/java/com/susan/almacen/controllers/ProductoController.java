@@ -24,23 +24,25 @@ import java.util.List;
 public class ProductoController {
 
     private final ProductoService productoService;
-    @Operation(summary = "Listar productos", description = "Todos los filtros son opc")
-    @ApiResponse(responseCode = "200", description = "Listado obtenido")
 
+    @GetMapping
+    @Operation(summary = "Listar productos", description = "Todos los filtros son opcionales")
+    @ApiResponse(responseCode = "200", description = "Listado obtenido")
     public ResponseEntity<List<ProductoResponse>> listar(
             @Parameter(description = "Busqueda por nombre", example = "Laptop")
             @RequestParam(required = false) String nombre,
 
-            @Parameter(description = "Busqueda por categoria", example = "Electrónico")
+            @Parameter(description = "Busqueda por categoria", example = "Electrónica")
             @RequestParam(required = false) String categoria,
 
             @Parameter(description = "Busqueda por precio minimo", example = "1000")
-            @RequestParam(required = false)BigDecimal precioMin,
+            @RequestParam(required = false) BigDecimal precioMin,
 
             @Parameter(description = "Busqueda por precio maximo", example = "20000")
             @RequestParam(required = false) BigDecimal precioMax
-    ){
-        return ResponseEntity.ok(productoService.listar(nombre, categoria, precioMin, precioMax));
+    ) {
+        return ResponseEntity.ok(
+                productoService.listar(nombre, categoria, precioMin, precioMax));
     }
 
     @GetMapping("/{id}")
@@ -48,33 +50,32 @@ public class ProductoController {
     @ApiResponse(responseCode = "200", description = "Producto encontrado")
     @ApiResponse(responseCode = "404", description = "El producto no existe")
     public ResponseEntity<ProductoResponse> obtenerPorId(
-
             @Parameter(description = "ID del producto", example = "1")
-            @PathVariable @Positive(message = "El ID  debe ser positivo") Long id
-    ){
+            @PathVariable @Positive(message = "El ID debe ser positivo") Long id
+    ) {
         return ResponseEntity.ok(productoService.obtenerPorId(id));
     }
 
     @PostMapping
     @Operation(summary = "Registrar un nuevo producto")
-    @ApiResponse(responseCode = "201",  description = "Producto creado")
-
-    public  ResponseEntity<ProductoResponse> registrar(
+    @ApiResponse(responseCode = "201", description = "Producto creado")
+    public ResponseEntity<ProductoResponse> registrar(
             @Valid @RequestBody ProductoRequest request
-    ){
-        return ResponseEntity.status(HttpStatus.CREATED).body(productoService.registrar(request));
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(productoService.registrar(request));
     }
 
-    @PostMapping("/{id}")
+    @PutMapping("/{id}")
     @Operation(summary = "Actualizar un producto existente")
     @ApiResponse(responseCode = "200", description = "Producto actualizado")
-    @ApiResponse(responseCode = "404", description = "El producto existe")
+    @ApiResponse(responseCode = "404", description = "El producto no existe")
     public ResponseEntity<ProductoResponse> actualizar(
             @Parameter(description = "ID del producto", example = "1")
             @PathVariable @Positive(message = "El ID debe ser positivo") Long id,
 
             @Valid @RequestBody ProductoRequest request
-    ){
+    ) {
         return ResponseEntity.ok(productoService.actualizar(request, id));
     }
 
@@ -82,11 +83,10 @@ public class ProductoController {
     @Operation(summary = "Eliminar un producto")
     @ApiResponse(responseCode = "204", description = "Producto eliminado")
     @ApiResponse(responseCode = "404", description = "El producto no existe")
-    public ResponseEntity<ProductoResponse> eliminar(
-
+    public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID del producto", example = "1")
             @PathVariable @Positive(message = "El ID debe ser positivo") Long id
-    ){
+    ) {
         productoService.eliminar(id);
         return ResponseEntity.noContent().build();
     }

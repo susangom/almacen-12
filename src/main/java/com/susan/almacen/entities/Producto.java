@@ -2,6 +2,7 @@ package com.susan.almacen.entities;
 
 import com.susan.almacen.enums.Categoria;
 import com.susan.almacen.exceptions.DatoInvalidoException;
+import com.susan.almacen.exceptions.DatoInvalidoException;
 import com.susan.almacen.utils.StringCustomUtils;
 import com.susan.almacen.utils.ValoresNumericosUtils;
 import jakarta.persistence.*;
@@ -13,12 +14,11 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Entity
-//loombook te sirve para evitar tantas lines de codigo solo son la 3 sig.
+@Table(name = "PRODUCTOS")
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Getter
-@Builder //se ocupa  para los que tiene  muchas propiedades
-@Table(name = "PRODUCTOS")
 public class Producto {
 
     @Id
@@ -33,27 +33,32 @@ public class Producto {
     @Enumerated(EnumType.STRING)
     private Categoria categoria;
 
-    @Column(name = "PRECIO", nullable = false)
+    @Column(name = "PRECIO", nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
     @Column(name = "CANTIDAD", nullable = false)
     private Integer cantidad;
 
-
-
-    public static Producto crear(
+    public static void validarDatos(
             String nombre, Categoria categoria,
             BigDecimal precio, Integer cantidad) {
 
-        validarDatos(nombre, categoria, precio, cantidad);
+        StringCustomUtils.ValidarTamanio(nombre, 5, 30,
+                "El nombre es requerido y debe tener entre 5 y 30 caracteres");
 
-        return Producto.builder()
-                .nombre(nombre)
-                .categoria(categoria)
-                .precio(precio)
-                .cantidad(cantidad)
-                .build();
+        if (categoria == null) {
+            throw new DatoInvalidoException("La categoria es requerida");
+        }
+
+        if (precio == null || precio.compareTo(BigDecimal.ZERO) < 0) {
+            throw new DatoInvalidoException(
+                    "El precio es requerido y no puede ser negativo");
+        }
+
+        ValoresNumericosUtils.validarEnteroPositivo(cantidad,
+                "La cantidad es requerida y debe ser positiva");
     }
+
     public void actualizar(
             String nombre, Categoria categoria,
             BigDecimal precio, Integer cantidad) {
@@ -70,29 +75,34 @@ public class Producto {
         ValoresNumericosUtils.validarEnteroPositivo(
                 cantidad,
                 "La cantidad debe ser positiva");
-                this.cantidad += cantidad;
+
+        this.cantidad += cantidad;
     }
 
     public void descontarCantidad(int cantidad) {
         ValoresNumericosUtils.validarEnteroPositivo(
                 cantidad,
-                "La cantidad debe ser positivo");
-        if (cantidad > this.cantidad)
-            throw new DatoInvalidoException("La cantidad debe ser menor que " +
-                    "ser menor o igual a la cantidad actual");
+                "La cantidad debe ser positiva");
+
+        if (cantidad > this.cantidad) {
+            throw new DatoInvalidoException(
+                    "La cantidad debe ser menor o igual a la cantidad actual");
+        }
 
         this.cantidad -= cantidad;
     }
-    public static void validarDatos(String nombre, Categoria categoria,
-                                    BigDecimal precio, Integer cantidad) {
 
-        StringCustomUtils.ValidarTamanio(nombre,5, 30,
-                "El nombre es requerido y debe tener entre 5 y 30 caracteres");
+    public static Producto crear(
+            String nombre, Categoria categoria,
+            BigDecimal precio, Integer cantidad) {
 
-        if (categoria == null)
-            throw new DatoInvalidoException("La categoría es requerida");
+        validarDatos(nombre, categoria, precio, cantidad);
 
+        return Producto.builder()
+                .nombre(nombre.trim())
+                .categoria(categoria)
+                .precio(precio)
+                .cantidad(cantidad)
+                .build();
     }
 }
-
-

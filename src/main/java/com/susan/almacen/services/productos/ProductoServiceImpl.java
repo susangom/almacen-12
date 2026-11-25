@@ -19,7 +19,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-
 public class ProductoServiceImpl implements ProductoService {
 
     private final ProductoRepository productoRepository;
@@ -27,20 +26,21 @@ public class ProductoServiceImpl implements ProductoService {
     private final ProductoMapper productoMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductoResponse> listar(
             String nombre, String categoria,
             BigDecimal precioMin, BigDecimal precioMax) {
 
-        log.info("Listando todods los productos...");
+        log.info("Listando todos los productos...");
         return productoRepository.findAll().stream()
-                //.map(producto -> productoMapper.entidadAResponse(p)).toList();
-                .map(productoMapper::entidadAResponse).toList();
+                .map(productoMapper::entidadAResponse)
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProductoResponse obtenerPorId(Long id) {
-        return null;
+        return productoMapper.entidadAResponse(obtenerProductoException(id));
     }
 
     @Override
@@ -71,10 +71,9 @@ public class ProductoServiceImpl implements ProductoService {
 
         productoRepository.saveAndFlush(producto);
 
-        log.info("Producto con id {} actulizado", id);
+        log.info("Producto con id {} actualizado", id);
 
         return productoMapper.entidadAResponse(producto);
-
     }
 
     @Override
@@ -85,9 +84,9 @@ public class ProductoServiceImpl implements ProductoService {
 
         productoRepository.delete(producto);
         productoRepository.flush();
-
     }
-    private Producto obtenerProductoException(Long id){
+
+    private Producto obtenerProductoException(Long id) {
         log.info("Buscando el producto con id: {}", id);
 
         return productoRepository.findById(id).orElseThrow(
